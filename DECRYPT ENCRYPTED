@@ -1,0 +1,65 @@
+import numpy as np
+
+class RNNCipher:
+    def __init__(self, seed=42):
+        # Originality: Using a seeded random weight matrix as a "Neural Key"
+        np.random.seed(seed)
+        self.chars = " abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.,!?"
+        self.char_to_int = {c: i for i, c in enumerate(self.chars)}
+        self.int_to_char = {i: c for i, c in enumerate(self.chars)}
+        
+        # Simple RNN-like transformation matrix (The "Weight")
+        self.weight_matrix = np.random.permutation(len(self.chars))
+
+    # METHOD ONE: Encrypt string
+    def encrypt_string(self, plaintext):
+        ciphertext = ""
+        for char in plaintext:
+            if char in self.char_to_int:
+                idx = self.char_to_int[char]
+                # Apply transformation
+                cipher_idx = self.weight_matrix[idx]
+                ciphertext += self.int_to_char[cipher_idx]
+            else:
+                ciphertext += char # Keep unknown chars as is
+        return ciphertext
+
+    # METHOD TWO: Decrypt string
+    def decrypt_string(self, ciphertext):
+        reversed_matrix = np.argsort(self.weight_matrix)
+        plaintext = ""
+        for char in ciphertext:
+            if char in self.char_to_int:
+                idx = self.char_to_int[char]
+                plain_idx = reversed_matrix[idx]
+                plaintext += self.int_to_char[plain_idx]
+            else:
+                plaintext += char
+        return plaintext
+
+    # METHOD THREE: Read txt file -> Encrypt -> Write encrypted txt
+    def encrypt_file(self, input_path, output_path):
+        with open(input_path, 'r') as f:
+            data = f.read()
+        encrypted_data = self.encrypt_string(data)
+        with open(output_path, 'w') as f:
+            f.write(encrypted_data)
+        return f"File encrypted and saved to {output_path}"
+
+    # METHOD FOUR: Read encrypted file -> Decrypt -> Write decoded txt
+    def decrypt_file(self, input_path, output_path):
+        with open(input_path, 'r') as f:
+            data = f.read()
+        decrypted_data = self.decrypt_string(data)
+        with open(output_path, 'w') as f:
+            f.write(decrypted_data)
+        return f"File decrypted and saved to {output_path}"
+
+# --- Execution ---
+cipher = RNNCipher(seed=2026) # Your specific key
+
+# Testing methods
+test_str = "Hello RNN"
+enc = cipher.encrypt_string(test_str)
+print(f"Encrypted: {enc}")
+print(f"Decrypted: {cipher.decrypt_string(enc)}")
